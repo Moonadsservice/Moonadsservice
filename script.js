@@ -1,14 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ------------------- CONFIGURATION -------------------
-    // Replace this with your own Google Sheet CSV link
-    // How to get the link: In Google Sheets, go to File > Share > Publish to web.
-    // In the dialog, select the sheet you want to publish, and choose "Comma-separated values (.csv)".
-    // Click "Publish" and copy the generated link here.
-    const googleSheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_R8A5X_4Q4Z_1A2B3C4D5E6F7G8H9I0J/pub?output=csv';
+    // This is the link to your Google Sheet.
+    const googleSheetCsvUrl = 'https://docs.google.com/spreadsheets/d/1oBFs0i1oazG94dFu0Loa5vQIh4p1J5K7U2fOGf7h0so/export?format=csv';
 
     // Replace this with your WhatsApp number, including the country code, without '+' or spaces.
     // For example: '1234567890' for a US number.
-    const whatsappNumber = '12345678900';
+    const whatsappNumber = '12345678900'; // Please replace with your actual number
     // -----------------------------------------------------
 
     const productGrid = document.getElementById('product-grid');
@@ -16,9 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryFiltersContainer = document.getElementById('category-filters');
     let allProducts = [];
 
-    // Simple CSV parser
     const parseCSV = (text) => {
-        const lines = text.split('\n');
+        const lines = text.trim().split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
         const rows = lines.slice(1).map(line => {
             const data = line.split(',').map(d => d.trim());
@@ -34,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderProducts = (products) => {
         productGrid.innerHTML = '';
         products.forEach(product => {
-            if (!product.name) return; // Skip empty rows
+            if (!product.product_name) return; // Skip empty rows
 
             const card = document.createElement('div');
             card.className = 'product-card';
@@ -44,13 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<p class="coming-soon">Coming Soon</p>`
                 : `<p class="product-price">$${product.price}</p>`;
 
-            const orderMessage = encodeURIComponent(`I'd like to order ${product.name} for $${product.price}`);
+            const orderMessage = encodeURIComponent(`I'd like to order ${product.product_name} for $${product.price}`);
             const whatsappLink = `https://wa.me/${whatsappNumber}?text=${orderMessage}`;
 
             card.innerHTML = `
-                <img src="${product.image_url}" alt="${product.name}">
+                <img src="${product.image_url}" alt="${product.product_name}">
                 <div class="product-info">
-                    <h2 class="product-name">${product.name}</h2>
+                    <h2 class="product-name">${product.product_name}</h2>
                     <p>${product.description || ''}</p>
                     ${priceDisplay}
                     ${!isComingSoon ? `<a href="${whatsappLink}" target="_blank" class="whatsapp-button">Order on WhatsApp</a>` : ''}
@@ -83,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filtered = allProducts.filter(product => {
             const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
-            const matchesSearch = product.name.toLowerCase().includes(searchTerm) || (product.description && product.description.toLowerCase().includes(searchTerm));
+            const matchesSearch = product.product_name.toLowerCase().includes(searchTerm) || (product.description && product.description.toLowerCase().includes(searchTerm));
             return matchesCategory && matchesSearch;
         });
 
@@ -92,21 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchProducts = async () => {
         try {
-            // A placeholder for the actual fetch call.
-            // Using dummy data to avoid making a real network request in this environment
-            // In a real scenario, this would be:
-            // const response = await fetch(googleSheetCsvUrl);
-            // if (!response.ok) throw new Error('Network response was not ok');
-            // const csvText = await response.text();
-
-            const csvText = `Name,Description,Price,Image URL,Category,Status
-MoonMist Tea,A calming herbal tea blend,5.99,https://images.unsplash.com/photo-1597318181433-2c529b3b0805?w=400,Tea,Available
-Galaxy Grind,Rich and dark coffee beans,12.50,https://images.unsplash.com/photo-1511920183359-32b934a0649e?w=400,Coffee,Available
-StarGazer Soda,A bubbly and sweet soda,3.00,https://images.unsplash.com/photo-1554866585-CD94860890b7?w=400,Soda,Available
-Comet Pop,A fizzy drink with a pop, ,https://images.unsplash.com/photo-1541857754-555a68138536?w=400,Soda,Coming Soon
-Nebula Nectar,A sweet and tangy juice,4.50,https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400,Juice,Available`;
+            const response = await fetch(googleSheetCsvUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const csvText = await response.text();
 
             allProducts = parseCSV(csvText);
+            // Check if there are any products after parsing
+            if(allProducts.length === 0 || !allProducts[0].product_name) {
+                productGrid.innerHTML = '<p>No products found. Check your Google Sheet data and make sure it is not empty.</p>';
+                return;
+            }
+
             renderProducts(allProducts);
             renderCategoryFilters(allProducts);
 
