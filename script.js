@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Replace this with your WhatsApp number, including the country code, without '+' or spaces.
     // For example: '1234567890' for a US number.
-    const whatsappNumber = '12345678900'; // Please replace with your actual number
+    const whatsappNumber = '2348063924891';
     // -----------------------------------------------------
 
     const productGrid = document.getElementById('product-grid');
